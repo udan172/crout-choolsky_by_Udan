@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NumeriKu – Metode Crout & Cholesky</title>
+<style>
+:root{--bg:#0b1226;--bg2:#121c3a;--card:#16224599;--tx:#e8edff;--mu:#9fb0e0;--ac:#38e1c6;--ac2:#ffb347;--bd:#2c3d75;--ok:#5be38a;--bad:#ff6b7a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#eef2ff;--bg2:#dfe7ff;--card:#ffffffcc;--tx:#14204a;--mu:#43548c;--ac:#0a8f7b;--ac2:#c76a00;--bd:#b5c3f0}}
+*{box-sizing:border-box}html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6;
+background-image:linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px);background-size:44px 44px;background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 20% 10%,transparent,var(--bg) 75%);pointer-events:none;opacity:.92}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;margin:.2em 0}
+.sym{position:fixed;font-family:Georgia,serif;color:var(--ac);opacity:.12;font-size:48px;animation:fl 14s ease-in-out infinite;pointer-events:none}
+@keyframes fl{50%{transform:translateY(-30px) rotate(8deg)}}
+.foot{position:fixed;right:12px;bottom:calc(8px + env(safe-area-inset-bottom,0px));text-align:right;font-size:11px;color:var(--mu);opacity:.75;pointer-events:none;z-index:60;max-width:60vw}
+.wrap{position:relative;z-index:2;max-width:980px;margin:0 auto;padding:16px 16px 60px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:20px;backdrop-filter:blur(6px);margin-bottom:16px}
+button{font:inherit;cursor:pointer;border:1px solid var(--ac);background:transparent;color:var(--ac);padding:8px 16px;border-radius:10px;transition:.2s}
+button:hover{background:var(--ac);color:#06101f}button.p{background:var(--ac);color:#06101f;font-weight:700}
+input,select{font:inherit;background:var(--bg2);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px}
+pre,.f{font-family:"Courier New",monospace;background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:12px;overflow-x:auto;margin:10px 0}
+.f{color:var(--ac2);font-size:1.05em}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;padding:16px}
+#login .card{max-width:440px;width:100%;text-align:center}
+.logo{font-size:44px;color:var(--ac);font-family:Georgia,serif}
+.mem{list-style:none;padding:0;margin:14px 0}.mem li{padding:8px;margin:6px 0;border:1px dashed var(--bd);border-radius:10px}
+#app{display:none}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}nav .sp{flex:1}
+nav button.on{background:var(--ac);color:#06101f}
+.bar{height:8px;background:var(--bg2);border-radius:8px;overflow:hidden;margin:8px 0 14px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:.4s}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.grid{display:grid;gap:6px;justify-content:start;margin:8px 0}.grid input{width:64px;text-align:center}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.mu{color:var(--mu)}
+.chip{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--bg2);border:1px solid var(--bd);font-size:12px;color:var(--ac2)}
+details{margin-top:8px}summary{cursor:pointer;color:var(--ac2)}
+.wg{margin-top:16px;padding:14px;border:1px dashed var(--ac);border-radius:14px;background:var(--bg2)}
+.mrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;overflow-x:auto;margin-top:8px}
+.mx{display:inline-block;text-align:center}.mx small{display:block;color:var(--mu)}
+.mx table{border-collapse:separate;border-spacing:3px;border-left:2px solid var(--ac);border-right:2px solid var(--ac);border-radius:6px;padding:2px 4px}
+.mx td{min-width:46px;padding:5px 6px;font-family:"Courier New",monospace;font-size:14px;border-radius:6px;text-align:center}
+.mx td.z{color:var(--mu);opacity:.5}.mx td.q{color:var(--mu)}.mx td.ok{color:var(--ok)}
+.mx td.hl{background:var(--ac2);color:#06101f;font-weight:700}.mx td.hl2{background:#38e1c633}
+.mx td.ck{cursor:pointer;border:1px solid var(--bd)}.mx td.ck:hover{background:var(--ac);color:#06101f}
+.wg .ex{min-height:48px}.wg button{margin:4px 4px 0 0;padding:6px 12px}
+</style></head><body>
+<div class="sym" style="left:6%;top:12%">∑</div><div class="sym" style="right:8%;top:22%;animation-delay:-4s">L·U</div><div class="sym" style="left:12%;bottom:18%;animation-delay:-7s">√</div><div class="sym" style="right:14%;bottom:12%;animation-delay:-2s">[ ]</div>
+<div class="foot">Dibuat oleh Yudan Sudarman, Annisa Ayu R, dan Mayla</div>
+
+<div id="login"><div class="card">
+<div class="logo">∑ L·U</div><h1>NumeriKu</h1>
+<p class="mu">Belajar Dekomposisi Matriks: Metode <b>Crout</b> &amp; <b>Cholesky</b></p>
+<input id="gname" value="Kelompok Metode Numerik" style="width:100%;text-align:center" aria-label="Nama kelompok">
+<ul class="mem"><li>👤 Yudan Sudarman</li><li>👤 Annisa Ayu R</li><li>👤 Mayla</li></ul>
+<button class="p" onclick="enter()">Masuk Platform →</button>
+</div></div>
+
+<div id="app" class="wrap">
+<div class="card" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">
+<div><h2>∑ NumeriKu</h2><span class="mu">Sistem Persamaan Linier • Bab IX</span></div><span class="chip" id="gl"></span></div>
+<nav><button class="on" onclick="go('materi',this)">📘 Materi</button><button onclick="go('kalk',this)">🧮 Kalkulator</button><button onclick="go('custom',this)">🎯 Soal Custom</button><button onclick="go('soal',this)">✍️ Contoh Soal</button><span class="sp"></span><button onclick="location.reload()">Keluar</button></nav>
+
+<section id="materi"><div class="tabs"><button class="p" id="tc" onclick="setM('crout')">Metode Crout</button><button id="th" onclick="setM('chol')">Metode Cholesky</button></div>
+<div class="card"><div class="mu" id="stl"></div><div class="bar"><i id="pg"></i></div><div id="stb"></div>
+<div style="display:flex;justify-content:space-between;margin-top:14px"><button onclick="step(-1)">← Sebelumnya</button><button class="p" onclick="step(1)">Selanjutnya →</button></div></div></section>
+
+<section id="kalk" style="display:none"><div class="card"><h3>Kalkulator Dekomposisi</h3>
+<div class="tabs"><select id="km"><option value="crout">Crout (A = L·U)</option><option value="chol">Cholesky (A = L·Lᵀ)</option></select>
+<select id="kn" onchange="mk()"><option>2</option><option selected>3</option><option>4</option></select><button onclick="preset()">Isi contoh buku</button></div>
+<div class="mu">Matriks A | vektor b</div><div id="kg"></div><button class="p" onclick="hitung()">Hitung langkah demi langkah</button><div id="ko"></div></div></section>
+
+<section id="custom" style="display:none"><div class="card"><h3>🎯 Soal Custom — Selesaikan Masalahmu Sendiri</h3><p class="mu">Masukkan sistem persamaan linier A·x = b pilihanmu, lalu selesaikan langkah demi langkah. Tebak setiap nilai dan platform akan mengeceknya.</p>
+<div class="tabs" style="flex-wrap:wrap"><select id="cm"><option value="crout">Crout</option><option value="chol">Cholesky (A simetris)</option></select><select id="cn" onchange="cMk()"><option>2</option><option selected>3</option><option>4</option></select><button onclick="cRand()">🎲 Soal acak</button><button onclick="cMk()">Kosongkan</button></div>
+<div class="mu">Matriks A | vektor b</div><div id="cg"></div><button class="p" onclick="cStart()">Mulai Selesaikan ▶</button><div id="cx"></div></div></section>
+<section id="soal" style="display:none"><div id="sl"></div></section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const F=x=>String(Math.round(x*10000)/10000+0).replace('-0','-0').replace(/^-0$/,'0');
+const mat=M=>M.map(r=>r.map(v=>F(v).padStart(9)).join('')).join('\n');
+const vec=v=>v.map(x=>F(x).padStart(9)).join('\n');
+function enter(){$('gl').textContent='👥 '+($('gname').value||'Kelompok');$('login').style.display='none';$('app').style.display='block';setM('crout');mk();soal();cMk()}
+function go(id,b){['materi','kalk','custom','soal'].forEach(s=>$(s).style.display=s==id?'block':'none');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));if(b)b.classList.add('on')}
+
+/* ===== SOLVERS ===== */
+function solve(m,A,b){const n=A.length,L=A.map(r=>r.map(()=>0)),U=A.map((r,i)=>r.map((_,j)=>i==j?1:0)),y=[],x=[];
+if(m=='chol'){for(let i=0;i<n;i++)for(let j=0;j<n;j++)if(Math.abs(A[i][j]-A[j][i])>1e-9)return{err:'Matriks A tidak simetris. Cholesky hanya untuk matriks simetris.'};
+for(let i=0;i<n;i++)for(let j=0;j<=i;j++){let s=A[i][j];for(let k=0;k<j;k++)s-=L[i][k]*L[j][k];
+if(i==j){if(s<=0)return{err:'Nilai di bawah akar ≤ 0 (matriks tidak definit positif).'};L[i][i]=Math.sqrt(s)}else L[i][j]=s/L[j][j]}
+for(let i=0;i<n;i++)for(let j=0;j<n;j++)U[i][j]=L[j][i]}
+else{for(let j=0;j<n;j++){for(let i=j;i<n;i++){let s=A[i][j];for(let k=0;k<j;k++)s-=L[i][k]*U[k][j];L[i][j]=s}
+if(Math.abs(L[j][j])<1e-12)return{err:'Pivot l'+(j+1)+(j+1)+' = 0, dekomposisi Crout gagal.'};
+for(let k=j+1;k<n;k++){let s=A[j][k];for(let q=0;q<j;q++)s-=L[j][q]*U[q][k];U[j][k]=s/L[j][j]}}}
+for(let i=0;i<n;i++){let s=b[i];for(let k=0;k<i;k++)s-=L[i][k]*y[k];y[i]=s/L[i][i]}
+for(let i=n-1;i>=0;i--){let s=y[i];for(let k=i+1;k<n;k++)s-=U[i][k]*x[k];x[i]=m=='chol'?s/U[i][i]:s}
+return{L,U,y,x}}
+function show(m,A,b){const r=solve(m,A,b);if(r.err)return'<p class="bad">⚠ '+r.err+'</p>';
+return`<div class="two"><div><b>L</b><pre>${mat(r.L)}</pre></div><div><b>${m=='chol'?'Lᵀ':'U'}</b><pre>${mat(r.U)}</pre></div></div>
+<div class="two"><div><b>y</b> (dari L·y = b)<pre>${vec(r.y)}</pre></div><div><b>x</b> (dari ${m=='chol'?'Lᵀ':'U'}·x = y)<pre>${vec(r.x)}</pre></div></div>
+<div class="mu">Cek L·${m=='chol'?'Lᵀ':'U'} = A: ${A.every((row,i)=>row.every((v,j)=>Math.abs(r.L[i].reduce((s,l,k)=>s+l*r.U[k][j],0)-v)<1e-6))?'<span class="ok">✔ Benar</span>':'<span class="bad">✘ Ada kesalahan</span>'}</div>`}
+
+/* ===== MATERI ===== */
+const T={crout:["Metode Crout",[
+["1. Gagasan Utama",`<h3>Mengapa dekomposisi?</h3><p>Sistem persamaan linier <b>A·x = b</b> dapat diselesaikan dengan memecah A menjadi dua matriks segitiga. Metode Crout cocok untuk sistem dengan beberapa vektor kolom b, sebab dekomposisi cukup dilakukan sekali.</p><div class="f">A = L · U</div><p><b>L</b> = segitiga bawah (diagonal bebas), <b>U</b> = segitiga atas dengan <b>diagonal utama bernilai 1</b>.</p>`],
+["2. Rumus Crout",`<p>Prosedur umum (persamaan 9.63 – 9.66):</p><div class="f">l<sub>i1</sub> = a<sub>i1</sub><br>l<sub>ij</sub> = a<sub>ij</sub> − Σ<sub>k=1..j−1</sub> l<sub>ik</sub>·u<sub>kj</sub> &nbsp;(i ≥ j)<br>u<sub>1j</sub> = a<sub>1j</sub> / l<sub>11</sub><br>u<sub>ij</sub> = ( a<sub>ij</sub> − Σ<sub>k=1..i−1</sub> l<sub>ik</sub>·u<sub>kj</sub> ) / l<sub>ii</sub> &nbsp;(j &gt; i)</div><p class="mu">Tips: hitung <b>kolom L</b> lebih dulu, lalu <b>baris U</b>, bergantian.</p>`],
+["3. Contoh: Menyusun L dan U",`<p>Contoh 9.16: x₁+x₂+2x₃=9; 2x₁+4x₂−3x₃=1; 3x₁+6x₂−5x₃=0</p><pre>A = [1 1 2; 2 4 −3; 3 6 −5],  b = [9; 1; 0]</pre>
+<p>Kolom 1 L: l₁₁=1, l₂₁=2, l₃₁=3. Baris 1 U: u₁₂=1, u₁₃=2.<br>l₂₂ = 4 − 2·1 = 2, l₃₂ = 6 − 3·1 = 3<br>u₂₃ = (−3 − 2·2)/2 = −3,5<br>l₃₃ = −5 − (3·2 + 3·(−3,5)) = −0,5</p><pre>L = [1 0 0; 2 2 0; 3 3 −0,5]\nU = [1 1 2; 0 1 −3,5; 0 0 1]</pre>`],
+["4. Substitusi Maju (L·y = b)",`<div class="f">y<sub>1</sub> = b<sub>1</sub>/l<sub>11</sub> ; y<sub>i</sub> = (b<sub>i</sub> − Σ l<sub>ik</sub>y<sub>k</sub>) / l<sub>ii</sub></div><pre>y₁ = 9/1 = 9\ny₂ = (1 − 2·9)/2 = −8,5\ny₃ = (0 − 3·9 − 3·(−8,5))/(−0,5) = 3</pre>`],
+["5. Substitusi Mundur (U·x = y)",`<div class="f">x<sub>n</sub> = y<sub>n</sub> ; x<sub>i</sub> = y<sub>i</sub> − Σ u<sub>ik</sub>x<sub>k</sub></div><pre>x₃ = 3\nx₂ = −8,5 − (−3,5)(3) = 2\nx₁ = 9 − 1·2 − 2·3 = 1</pre><p class="ok"><b>Solusi: x₁ = 1, x₂ = 2, x₃ = 3</b> ✔</p>`],
+["6. Kode MATLAB",`<p>Inti program pada buku (diringkas):</p><pre>n=rank(A); L=zeros(n); U=eye(n);\nfor s=1:n\n  j=s;\n  for i=j:n\n    L(i,j)=A(i,j)-L(i,1:(j-1))*U(1:(j-1),j);\n  end\n  i=s;\n  for j=i+1:n\n    U(i,j)=(A(i,j)-L(i,1:(i-1))*U(1:(i-1),j))/L(i,i);\n  end\nend\ncheck = L*U   % harus sama dengan A</pre><p>🎉 Materi Crout selesai! Coba <b>Kalkulator</b> dan <b>Contoh Soal</b>.</p>`]]],
+chol:["Metode Cholesky",[
+["1. Syarat & Gagasan",`<h3>Khusus matriks simetris</h3><p>Jika A <b>simetris</b> (dan definit positif), A dapat ditulis sebagai:</p><div class="f">A = L · Lᵀ &nbsp;&nbsp;(9.68)</div><p>Cukup <b>satu matriks L</b> yang disimpan, sehingga lebih hemat memori dan lebih efisien dibanding metode lain.</p>`],
+["2. Rumus Cholesky",`<div class="f">l<sub>11</sub> = √a<sub>11</sub><br>l<sub>ii</sub> = √( a<sub>ii</sub> − Σ<sub>k=1..i−1</sub> l<sub>ik</sub>² )<br>l<sub>i1</sub> = a<sub>i1</sub> / l<sub>11</sub><br>l<sub>ij</sub> = ( a<sub>ij</sub> − Σ<sub>k=1..j−1</sub> l<sub>ik</sub>·l<sub>jk</sub> ) / l<sub>jj</sub> &nbsp;(i &gt; j)</div><p class="mu">Rumus (9.70) – (9.73) pada buku.</p>`],
+["3. Contoh: Menghitung L",`<p>Contoh 9.17: A = [6 15 55; 15 55 225; 55 225 979], b = jumlah tiap baris = [76; 295; 1259].</p><p class="mu">(Pada buku tertulis 9789 di persamaan, tetapi kode & hasil memakai 979.)</p><pre>l₁₁ = √6 = 2,4495\nl₂₁ = 15/2,4495 = 6,1237\nl₃₁ = 55/2,4495 = 22,4537\nl₂₂ = √(55 − 6,1237²) = √17,5 = 4,1833\nl₃₂ = (225 − 6,1237·22,4537)/4,1833 = 20,9165\nl₃₃ = √(979 − 22,4537² − 20,9165²) = 6,1101</pre>`],
+["4. Substitusi Maju (L·y = b)",`<pre>y₁ = 76/2,4495 = 31,0268\ny₂ = (295 − 6,1237·31,0268)/4,1833 = 25,0\ny₃ = (1259 − 22,4537·31,0268 − 20,9165·25,0)/6,1101 ≈ 6,1101</pre><p class="mu">Nilai y dihitung berurutan dari atas ke bawah.</p>`],
+["5. Substitusi Mundur (Lᵀ·x = y)",`<pre>x₃ = y₃ / l₃₃ = 1\nx₂ = (y₂ − l₃₂·x₃)/l₂₂ = (25 − 20,9165)/4,1833 = 1\nx₁ = (y₁ − l₂₁x₂ − l₃₁x₃)/l₁₁ = 1</pre><p class="ok"><b>Solusi: x₁ = x₂ = x₃ = 1</b> ✔</p>`],
+["6. Kode MATLAB",`<pre>A = [6 15 55; 15 55 225; 55 225 979];\nB = [sum(A(1,:)); sum(A(2,:)); sum(A(3,:))];\nU = chol(A);   % A = U'*U\nC = U'*U\nD = U'\\B       % substitusi maju\nX = U\\D        % substitusi mundur</pre><p>🎉 Materi Cholesky selesai! Lanjut ke <b>Contoh Soal</b>.</p>`]]]};
+let cm='crout',si=0;
+function setM(m){cm=m;si=0;$('tc').className=m=='crout'?'p':'';$('th').className=m=='chol'?'p':'';render()}
+function step(d){const n=T[cm][1].length;si=Math.max(0,Math.min(n-1,si+d));render()}
+function render(){const s=T[cm][1];$('stl').textContent=T[cm][0]+' — langkah '+(si+1)+' dari '+s.length+' • '+s[si][0];$('pg').style.width=((si+1)/s.length*100)+'%';$('stb').innerHTML='<h2>'+s[si][0]+'</h2>'+s[si][1]+'<div id="wg"></div>';ws=0;hs=null;widget()}
+
+/* ===== MATERI INTERAKTIF ===== */
+let ws=0,hs=null;
+const ND={crout:{A:[[1,1,2],[2,4,-3],[3,6,-5]],b:[9,1,0]},chol:{A:[[6,15,55],[15,55,225],[55,225,979]],b:[76,295,1259]}};
+function bm(rows,cap){return '<div class="mx">'+(cap?'<small>'+cap+'</small>':'')+'<table>'+rows.map(r=>'<tr>'+r.map(c=>'<td'+(c[1]?' class="'+c[1]+'"':'')+(c[2]?' onclick="'+c[2]+'"':'')+'>'+c[0]+'</td>').join('')+'</tr>').join('')+'</table></div>'}
+function widget(){const e=$('wg');if(!e)return;let h='';if(si<2)h=wHL();else if(si==2)h=wFill();else if(si==3||si==4)h=wSub(si==3);e.className=h?'wg':'';e.innerHTML=h}
+function ctl(t){return `<div>Langkah ${ws}/${t} <button onclick="ws=Math.max(0,ws-1);widget()">← Mundur</button><button class="p" onclick="ws=Math.min(${t},ws+1);widget()">Hitung berikutnya →</button><button onclick="ws=${t};widget()">Selesaikan semua</button><button onclick="ws=0;widget()">Ulangi</button></div>`}
+function wHL(){const n=3,c=cm=='crout',[a,b]=hs||[-1,-1],A=[],L=[],U=[];
+for(let i=0;i<n;i++){A.push([]);L.push([]);U.push([]);for(let j=0;j<n;j++){
+A[i].push([`a<sub>${i+1}${j+1}</sub>`,'ck'+(i==a&&j==b?' hl':''),`hs=[${i},${j}];widget()`]);
+L[i].push(j<=i?[`l<sub>${i+1}${j+1}</sub>`,i==a?'hl2':'']:['0','z']);
+U[i].push(j<i?['0','z']:(c&&i==j?['1',j==b?'hl2':'']:[c?`u<sub>${i+1}${j+1}</sub>`:`l<sub>${j+1}${i+1}</sub>`,j==b?'hl2':'']))}}
+let t='👆 Klik salah satu elemen matriks <b>A</b> untuk melihat baris L dan kolom '+(c?'U':'Lᵀ')+' yang membentuknya.';
+if(a>=0){const m=Math.min(a,b),tm=[];for(let k=0;k<=m;k++)tm.push(c?`l<sub>${a+1}${k+1}</sub>`+(k==b?'':`·u<sub>${k+1}${b+1}</sub>`):`l<sub>${a+1}${k+1}</sub>·l<sub>${b+1}${k+1}</sub>`);t=`a<sub>${a+1}${b+1}</sub> = ${tm.join(' + ')}`}
+return '<b>🎮 Coba sendiri:</b> bentuk matriks A = '+(c?'L × U':'L × Lᵀ')+'<div class="mrow">'+bm(A,'A')+'<span>=</span>'+bm(L,'L')+'<span>×</span>'+bm(U,c?'U':'Lᵀ')+'</div><div class="f ex">'+t+'</div>'}
+function wFill(){const {A,b}=ND[cm],R=solve(cm,A,b),n=3,c=cm=='crout',o=[];
+if(c){for(let j=0;j<n;j++){for(let i=j;i<n;i++)o.push(['L',i,j]);for(let k=j+1;k<n;k++)o.push(['U',j,k])}}else{for(let i=0;i<n;i++)for(let j=0;j<=i;j++)o.push(['L',i,j])}
+const dn={};o.slice(0,ws).forEach(t=>dn[t.join('')]=1);const cur=ws?o[ws-1]:null,ck=cur?cur.join(''):'';
+const cl=(key,v)=>dn[key]?[F(v),key==ck?'hl':'ok']:['?','q'];
+const Am=A.map(r=>r.map(v=>[F(v),''])),L=[],U=[];
+for(let i=0;i<n;i++){L.push([]);U.push([]);for(let j=0;j<n;j++){
+L[i].push(j>i?['0','z']:cl('L'+i+j,R.L[i][j]));
+U[i].push(j<i?['0','z']:(c?(i==j?['1','']:cl('U'+i+j,R.U[i][j])):cl('L'+j+i,R.L[j][i])))}}
+let t='Tekan <b>Hitung berikutnya</b> untuk mengisi elemen matriks satu per satu.';
+if(cur){const [w,i,j]=cur,I=i+1,J=j+1,a=F(A[i][j]),tm=[];
+if(c&&w=='L'){for(let k=0;k<j;k++)tm.push(F(R.L[i][k])+'·'+F(R.U[k][j]));t=`l<sub>${I}${J}</sub> = a<sub>${I}${J}</sub>${j?' − Σ l<sub>ik</sub>u<sub>kj</sub>':''} = ${a}${j?' − ('+tm.join(' + ')+')':''} = <b>${F(R.L[i][j])}</b>`}
+else if(c){for(let k=0;k<i;k++)tm.push(F(R.L[i][k])+'·'+F(R.U[k][j]));t=`u<sub>${I}${J}</sub> = (a<sub>${I}${J}</sub>${i?' − Σ l<sub>ik</sub>u<sub>kj</sub>':''}) / l<sub>${I}${I}</sub> = (${a}${i?' − ('+tm.join(' + ')+')':''}) / ${F(R.L[i][i])} = <b>${F(R.U[i][j])}</b>`}
+else if(i==j){for(let k=0;k<j;k++)tm.push(F(R.L[i][k])+'²');t=`l<sub>${I}${I}</sub> = √(a<sub>${I}${I}</sub>${j?' − Σ l<sub>ik</sub>²':''}) = √(${a}${j?' − ('+tm.join(' + ')+')':''}) = <b>${F(R.L[i][i])}</b>`}
+else{for(let k=0;k<j;k++)tm.push(F(R.L[i][k])+'·'+F(R.L[j][k]));t=`l<sub>${I}${J}</sub> = (a<sub>${I}${J}</sub>${j?' − Σ l<sub>ik</sub>l<sub>jk</sub>':''}) / l<sub>${J}${J}</sub> = (${a}${j?' − ('+tm.join(' + ')+')':''}) / ${F(R.L[j][j])} = <b>${F(R.L[i][j])}</b>`}}
+return '<b>🎮 Isi matriks langkah demi langkah</b><div class="mrow">'+bm(Am,'A')+'<span>=</span>'+bm(L,'L')+'<span>×</span>'+bm(U,c?'U':'Lᵀ')+'</div><div class="f ex">'+t+'</div>'+ctl(o.length)}
+function wSub(fw){const {A,b}=ND[cm],R=solve(cm,A,b),c=cm=='crout',M=fw?R.L:R.U,v=fw?R.y:R.x,rh=fw?b:R.y,ord=fw?[0,1,2]:[2,1,0],dn=ord.slice(0,ws),cur=ws?ord[ws-1]:-1;
+const Mm=M.map((r,i)=>r.map(x=>[F(x),i==cur?'hl2':''])),V=v.map((x,i)=>dn.includes(i)?[F(x),i==cur?'hl':'ok']:['?','q']),Bm=rh.map(x=>[F(x),'']);
+let t='Tekan <b>Hitung berikutnya</b> untuk menyelesaikan satu persamaan.';
+if(cur>=0){const i=cur,I=i+1,tm=[];
+if(fw){for(let k=0;k<i;k++)tm.push(F(R.L[i][k])+'·'+F(R.y[k]));t=`y<sub>${I}</sub> = (b<sub>${I}</sub>${i?' − Σ l<sub>ik</sub>y<sub>k</sub>':''}) / l<sub>${I}${I}</sub> = (${F(b[i])}${i?' − ('+tm.join(' + ')+')':''}) / ${F(R.L[i][i])} = <b>${F(R.y[i])}</b>`}
+else{for(let k=i+1;k<3;k++)tm.push(F(R.U[i][k])+'·'+F(R.x[k]));const s=`${F(R.y[i])}${tm.length?' − ('+tm.join(' + ')+')':''}`;t=`x<sub>${I}</sub> = ${c?'':'('}y<sub>${I}</sub>${tm.length?' − Σ '+(c?'u':'l')+'<sub>ik</sub>x<sub>k</sub>':''}${c?'':') / '+(c?'':'l<sub>'+I+I+'</sub>')} = ${c?s:'('+s+') / '+F(R.U[i][i])} = <b>${F(R.x[i])}</b>`}}
+return '<b>🎮 '+(fw?'Substitusi maju: L·y = b':'Substitusi mundur: '+(c?'U':'Lᵀ')+'·x = y')+'</b><div class="mrow">'+bm(Mm,fw?'L':(c?'U':'Lᵀ'))+'<span>×</span>'+bm(V,fw?'y':'x')+'<span>=</span>'+bm(Bm,fw?'b':'y')+'</div><div class="f ex">'+t+'</div>'+ctl(3)}
+
+/* ===== KALKULATOR ===== */
+function mk(){const n=+$('kn').value;let h='<div class="grid" style="grid-template-columns:repeat('+(n+1)+',auto)">';for(let i=0;i<n;i++){for(let j=0;j<n;j++)h+=`<input id="a${i}${j}" type="number" step="any" value="0">`;h+=`<input id="b${i}" type="number" step="any" value="0" style="border-color:var(--ac2)">`}$('kg').innerHTML=h+'</div>';$('ko').innerHTML=''}
+function setv(A,b){$('kn').value=A.length;mk();A.forEach((r,i)=>{r.forEach((v,j)=>$('a'+i+j).value=v);$('b'+i).value=b[i]})}
+function preset(){$('km').value=='chol'?setv([[6,15,55],[15,55,225],[55,225,979]],[76,295,1259]):setv([[1,1,2],[2,4,-3],[3,6,-5]],[9,1,0])}
+function hitung(){const n=+$('kn').value,A=[],b=[];for(let i=0;i<n;i++){A.push([]);for(let j=0;j<n;j++)A[i].push(+$('a'+i+j).value);b.push(+$('b'+i).value)}$('ko').innerHTML=show($('km').value,A,b)}
+
+/* ===== CUSTOM ===== */
+let C=null;
+function cMk(){const n=+$('cn').value;let h='<div class="grid" style="grid-template-columns:repeat('+(n+1)+',auto)">';for(let i=0;i<n;i++){for(let j=0;j<n;j++)h+=`<input id='ca${i}${j}' type='number' step='any' value='0'>`;h+=`<input id='cb${i}' type='number' step='any' value='0' style='border-color:var(--ac2)'>`}$('cg').innerHTML=h+'</div>';$('cx').innerHTML='';C=null}
+function cSet(A,b){$('cn').value=A.length;cMk();A.forEach((r,i)=>{r.forEach((v,j)=>$('ca'+i+j).value=v);$('cb'+i).value=b[i]})}
+function cRand(){const n=+$('cn').value,m=$('cm').value,rd=k=>Math.floor(Math.random()*k),x=[...Array(n)].map(()=>rd(5)+1);let A;
+if(m=='chol'){const B=[...Array(n)].map(()=>[...Array(n)].map(()=>rd(5)-2));A=B.map((_,i)=>B.map((_,j)=>B[i].reduce((s,v,k)=>s+v*B[j][k],0)+(i==j?1:0)))}
+else{do{A=[...Array(n)].map(()=>[...Array(n)].map(()=>rd(7)-3||1));A.forEach((row,i)=>row[i]=rd(4)+2)}while(solve('crout',A,x).err)}
+cSet(A,A.map(row=>row.reduce((s,v,k)=>s+v*x[k],0)))}
+function cStart(){const n=+$('cn').value,m=$('cm').value,A=[],b=[];for(let i=0;i<n;i++){A.push([]);for(let j=0;j<n;j++)A[i].push(+$('ca'+i+j).value);b.push(+$('cb'+i).value)}
+const R=solve(m,A,b);if(R.err){C=null;$('cx').innerHTML='<p class="bad">⚠ '+R.err+'</p>';return}
+const o=[];if(m=='crout'){for(let j=0;j<n;j++){for(let i=j;i<n;i++)o.push(['L',i,j]);for(let k=j+1;k<n;k++)o.push(['U',j,k])}}else{for(let i=0;i<n;i++)for(let j=0;j<=i;j++)o.push(['L',i,j])}
+for(let i=0;i<n;i++)o.push(['y',i]);for(let i=n-1;i>=0;i--)o.push(['x',i]);
+C={m,A,b,R,o,cs:0,n,msg:''};cDraw()}
+function cv(t){const R=C.R;return t[0]=='L'?R.L[t[1]][t[2]]:t[0]=='U'?R.U[t[1]][t[2]]:t[0]=='y'?R.y[t[1]]:R.x[t[1]]}
+function cl(t){const I=t[1]+1,J=(t[2]||0)+1;return (t[0]=='y'||t[0]=='x')?`${t[0]}<sub>${I}</sub>`:`${t[0]=='L'?'l':'u'}<sub>${I}${J}</sub>`}
+function cf(t){const {m,A,b,R,n}=C,[w,i,j]=t,I=i+1,J=(j||0)+1,c=m=='crout',tm=[],S=()=>tm.length?' − ('+tm.join(' + ')+')':'';
+if(w=='L'&&c){for(let k=0;k<j;k++)tm.push(F(R.L[i][k])+'·'+F(R.U[k][j]));return `l<sub>${I}${J}</sub> = a<sub>${I}${J}</sub>${j?' − Σ l<sub>ik</sub>u<sub>kj</sub>':''} = ${F(A[i][j])}${S()} = <b>${F(R.L[i][j])}</b>`}
+if(w=='U'){for(let k=0;k<i;k++)tm.push(F(R.L[i][k])+'·'+F(R.U[k][j]));return `u<sub>${I}${J}</sub> = (a<sub>${I}${J}</sub>${i?' − Σ l<sub>ik</sub>u<sub>kj</sub>':''}) / l<sub>${I}${I}</sub> = (${F(A[i][j])}${S()}) / ${F(R.L[i][i])} = <b>${F(R.U[i][j])}</b>`}
+if(w=='L'&&i==j){for(let k=0;k<j;k++)tm.push(F(R.L[i][k])+'²');return `l<sub>${I}${I}</sub> = √(a<sub>${I}${I}</sub>${j?' − Σ l<sub>ik</sub>²':''}) = √(${F(A[i][i])}${S()}) = <b>${F(R.L[i][i])}</b>`}
+if(w=='L'){for(let k=0;k<j;k++)tm.push(F(R.L[i][k])+'·'+F(R.L[j][k]));return `l<sub>${I}${J}</sub> = (a<sub>${I}${J}</sub>${j?' − Σ l<sub>ik</sub>l<sub>jk</sub>':''}) / l<sub>${J}${J}</sub> = (${F(A[i][j])}${S()}) / ${F(R.L[j][j])} = <b>${F(R.L[i][j])}</b>`}
+if(w=='y'){for(let k=0;k<i;k++)tm.push(F(R.L[i][k])+'·'+F(R.y[k]));return `y<sub>${I}</sub> = (b<sub>${I}</sub>${i?' − Σ l<sub>ik</sub>y<sub>k</sub>':''}) / l<sub>${I}${I}</sub> = (${F(b[i])}${S()}) / ${F(R.L[i][i])} = <b>${F(R.y[i])}</b>`}
+for(let k=i+1;k<n;k++)tm.push(F(R.U[i][k])+'·'+F(R.x[k]));
+return c?`x<sub>${I}</sub> = y<sub>${I}</sub>${tm.length?' − Σ u<sub>ik</sub>x<sub>k</sub>':''} = ${F(R.y[i])}${S()} = <b>${F(R.x[i])}</b>`:`x<sub>${I}</sub> = (y<sub>${I}</sub>${tm.length?' − Σ l<sub>ki</sub>x<sub>k</sub>':''}) / l<sub>${I}${I}</sub> = (${F(R.y[i])}${S()}) / ${F(R.U[i][i])} = <b>${F(R.x[i])}</b>`}
+function cDraw(){if(!C)return;const {m,A,R,o,cs,n}=C,c=m=='crout',dn={};o.slice(0,cs).forEach(t=>dn[t.join('')]=1);const last=cs?o[cs-1]:null,lk=last?last.join(''):'';
+const ce=(k,v)=>dn[k]?[F(v),k==lk?'hl':'ok']:['?','q'];
+const Am=A.map(r=>r.map(v=>[F(v),''])),L=[],U=[];
+for(let i=0;i<n;i++){L.push([]);U.push([]);for(let j=0;j<n;j++){L[i].push(j>i?['0','z']:ce('L'+i+j,R.L[i][j]));U[i].push(j<i?['0','z']:(c?(i==j?['1','']:ce('U'+i+j,R.U[i][j])):ce('L'+j+i,R.L[j][i])))}}
+const Y=R.y.map((v,i)=>ce('y'+i,v)),X=R.x.map((v,i)=>ce('x'+i,v));let p,ph='';
+if(cs<o.length){const t=o[cs];ph=t[0]=='y'?'Substitusi maju':t[0]=='x'?'Substitusi mundur':'Dekomposisi';p=`<div>🤔 Hitung <b>${cl(t)}</b> = ? <input id='cin' type='number' step='any' placeholder='jawabanmu' onkeydown='if(event.keyCode==13)cCheck()'> <button class='p' onclick='cCheck()'>Cek jawabanku</button><button onclick='cShow()'>Tampilkan jawaban</button></div>`}
+else{ph='Selesai';p=`<p class='ok'><b>✔ Solusi:</b> ${R.x.map((v,i)=>'x<sub>'+(i+1)+'</sub> = '+F(v)).join(', ')}</p><div class='mu'>Cek A·x = b: ${A.every((r,i)=>Math.abs(r.reduce((s,v,k)=>s+v*R.x[k],0)-C.b[i])<1e-6)?'<span class=ok>✔ Benar</span>':'<span class=bad>✘ Ada kesalahan</span>'}</div>`}
+$('cx').innerHTML=`<div class='wg'><div class='mu'>Langkah ${cs}/${o.length} • ${ph}</div><div class='mrow'>${bm(Am,'A')}<span>=</span>${bm(L,'L')}<span>×</span>${bm(U,c?'U':'Lᵀ')}</div><div class='mrow'>${bm(Y,'y')}${bm(X,'x')}</div><div class='f ex'>${C.msg}${last?cf(last):'Isi nilai yang diminta, atau tekan Tampilkan jawaban.'}</div>${p}<div><button onclick='cBack()'>← Mundur</button><button onclick='cReset()'>Ulangi</button></div></div>`}
+function cCheck(){const e=$('cin'),v=parseFloat((e.value||'').replace(',','.'));if(isNaN(v)){C.msg='<span class=bad>Isi angka dulu.</span><br>';cDraw();return}
+if(Math.abs(v-cv(C.o[C.cs]))<0.01){C.cs++;C.msg='<span class=ok>✔ Tepat!</span><br>';cDraw();const n=$('cin');if(n)n.focus()}else{C.msg='<span class=bad>✘ Belum tepat, coba lagi atau tekan Tampilkan jawaban.</span><br>';cDraw()}}
+function cShow(){C.cs++;C.msg='';cDraw()}
+function cBack(){C.cs=Math.max(0,C.cs-1);C.msg='';cDraw()}
+function cReset(){C.cs=0;C.msg='';cDraw()}
+
+/* ===== SOAL ===== */
+const Q=[
+{m:'crout',A:[[2,1],[4,3]],b:[3,7],t:'Selesaikan dengan metode Crout: 2x₁ + x₂ = 3 ; 4x₁ + 3x₂ = 7'},
+{m:'crout',A:[[2,1,1],[4,3,3],[8,7,9]],b:[4,10,24],t:'Selesaikan dengan metode Crout: 2x₁+x₂+x₃=4 ; 4x₁+3x₂+3x₃=10 ; 8x₁+7x₂+9x₃=24'},
+{m:'chol',A:[[4,2],[2,5]],b:[6,7],t:'Selesaikan dengan metode Cholesky: 4x₁+2x₂=6 ; 2x₁+5x₂=7'},
+{m:'chol',A:[[4,12,-16],[12,37,-43],[-16,-43,98]],b:[0,6,39],t:'Selesaikan dengan metode Cholesky: 4x₁+12x₂−16x₃=0 ; 12x₁+37x₂−43x₃=6 ; −16x₁−43x₂+98x₃=39'}];
+function soal(){let h='';Q.forEach((q,i)=>{h+=`<div class="card"><span class="chip">Soal ${i+1} • ${q.m=='crout'?'Crout':'Cholesky'}</span><p>${q.t}</p>
+<input id="an${i}" placeholder="Jawab: x₁, x₂, ..." style="width:min(100%,260px)"> <button class="p" onclick="cek(${i})">Cek Jawaban</button>
+<div id="fb${i}"></div><details><summary>🔑 Lihat kunci jawaban</summary>${show(q.m,q.A,q.b)}</details></div>`});
+h+=`<div class="card"><span class="chip">Soal 5 • Konsep</span><p>Apa syarat matriks A agar dapat didekomposisi dengan metode Cholesky, dan apa keuntungannya dibanding Crout?</p><details><summary>🔑 Lihat kunci jawaban</summary><p>A harus <b>simetris</b> (dan definit positif). Dekomposisi A = L·Lᵀ hanya menyimpan satu matriks (L) sehingga lebih hemat memori dan lebih efisien.</p></details></div>`;$('sl').innerHTML=h}
+function cek(i){const r=solve(Q[i].m,Q[i].A,Q[i].b),v=$('an'+i).value.split(/[,;\s]+/).filter(Boolean).map(s=>+s.replace(',','.'));
+const ok=v.length==r.x.length&&v.every((a,k)=>Math.abs(a-r.x[k])<0.01);$('fb'+i).innerHTML=ok?'<p class="ok">✔ Benar! Hebat.</p>':'<p class="bad">✘ Belum tepat, coba hitung lagi atau lihat kunci jawaban.</p>'}
+</script></body></html>
